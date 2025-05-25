@@ -1,6 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, UserData } from '../types';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { useTextToSpeech } from '../hooks/useTextToSpeech';
+import { VoiceControls } from './VoiceControls';
 
 interface ConversationPanelProps {
   messages: ChatMessage[];
@@ -21,12 +24,56 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isValid, setIsValid] = useState(true);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const {
+    isListening,
+    transcript,
+    startListening,
+    stopListening,
+    isSupported: speechSupported,
+    error: speechError
+  } = useSpeechRecognition();
+
+  const {
+    speak,
+    isSpeaking,
+    stop: stopSpeaking,
+    isSupported: ttsSupported
+  } = useTextToSpeech();
+
+  const isVoiceSupported = speechSupported && ttsSupported;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Handle new agent messages in voice mode
+  useEffect(() => {
+    if (isVoiceMode && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.type === 'agent') {
+        speak(lastMessage.content);
+      }
+    }
+  }, [messages, isVoiceMode, speak]);
+
+  // Handle voice transcript
+  useEffect(() => {
+    if (transcript && isVoiceMode) {
+      setInputValue(transcript);
+      // Auto-submit after a pause
+      const timer = setTimeout(() => {
+        if (transcript.trim()) {
+          handleSubmit(new Event('submit') as any);
+        }
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [transcript, isVoiceMode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +87,10 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
     onMessage(inputValue);
     setInputValue('');
     setIsValid(true);
+    
+    if (isVoiceMode && isListening) {
+      stopListening();
+    }
   };
 
   const processPhaseInput = (value: string) => {
@@ -88,6 +139,10 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
   };
 
   const getPlaceholder = () => {
+    if (isVoiceMode) {
+      return isListening ? 'Escutando...' : 'Clique em "Falar" para responder por voz';
+    }
+    
     switch (currentPhase) {
       case 1:
         return 'Ex: R$ 8.500';
@@ -101,6 +156,10 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
   };
 
   const getInputHint = () => {
+    if (isVoiceMode) {
+      return '🎤 Modo de conversa por voz ativo';
+    }
+    
     switch (currentPhase) {
       case 1:
         return '💡 Ex: R$ 8.500';
@@ -150,6 +209,12 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
 
       {/* Input Area */}
       <div className="p-6 border-t border-white/10">
+        {speechError && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded text-sm text-red-200">
+            {speechError}
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <input
@@ -158,8 +223,9 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
               value={inputValue}
               onChange={handleInputChange}
               placeholder={getPlaceholder()}
-              className={`horizon-input ${!isValid ? 'error' : ''}`}
-              autoFocus
+              className={`horizon-input ${!isValid ? 'error' : ''} ${isVoiceMode ? 'bg-white/10' : ''}`}
+              autoFocus={!isVoiceMode}
+              disabled={isVoiceMode && isListening}
             />
             {getInputHint() && (
               <div className="text-sm text-horizon-text-secondary">
@@ -168,24 +234,41 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
             )}
           </div>
           
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              className="horizon-button"
-            >
-              Continuar
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => setInputValue('')}
-              className="px-4 py-2 text-sm text-horizon-text-secondary hover:text-white transition-colors duration-200"
-            >
-              Limpar
-            </button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {!isVoiceMode && (
+                <button
+                  type="submit"
+                  className="horizon-button"
+                >
+                  Continuar
+                </button>
+              )}
+              
+              <button
+                type="button"
+                onClick={() => setInputValue('')}
+                className="px-4 py-2 text-sm text-horizon-text-secondary hover:text-white transition-colors duration-200"
+              >
+                Limpar
+              </button>
+            </div>
 
-            <div className="ml-auto text-sm text-horizon-text-secondary">
-              ⌘K Comandos
+            <div className="flex items-center gap-4">
+              <VoiceControls
+                isVoiceMode={isVoiceMode}
+                isListening={isListening}
+                isSpeaking={isSpeaking}
+                isSupported={isVoiceSupported}
+                onToggleVoiceMode={() => setIsVoiceMode(!isVoiceMode)}
+                onStartListening={startListening}
+                onStopListening={stopListening}
+                onStopSpeaking={stopSpeaking}
+              />
+
+              <div className="text-sm text-horizon-text-secondary">
+                ⌘K Comandos
+              </div>
             </div>
           </div>
         </form>
