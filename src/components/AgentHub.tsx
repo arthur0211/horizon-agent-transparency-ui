@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bot, BarChart3, Target, Zap, FileText, Wrench, ClipboardList, Keyboard } from 'lucide-react';
+import { Bot, BarChart3, Target, Zap, FileText, Wrench, ClipboardList, Keyboard, Calculator, User, TrendingUp } from 'lucide-react';
 import { AgentStatus, PlanningPhase } from '../types';
 
 interface AgentHubProps {
@@ -18,6 +18,19 @@ export const AgentHub: React.FC<AgentHubProps> = ({
   onPhaseClick,
   className = ''
 }) => {
+  const getToolIcon = (toolName: string) => {
+    switch (toolName) {
+      case 'Calculadora Juros':
+        return <Calculator className="w-4 h-4" />;
+      case 'Análise Perfil':
+        return <User className="w-4 h-4" />;
+      case 'Projeção Financeira':
+        return <TrendingUp className="w-4 h-4" />;
+      default:
+        return <Wrench className="w-4 h-4" />;
+    }
+  };
+
   return (
     <aside className={`w-80 p-6 border-r border-white/10 space-y-6 ${className}`} role="complementary">
       {/* Agent Info */}
@@ -97,7 +110,7 @@ export const AgentHub: React.FC<AgentHubProps> = ({
               key={index}
               className={`tool-indicator ${tool.isActive ? 'active' : ''}`}
             >
-              <span className="text-sm">{tool.icon}</span>
+              {getToolIcon(tool.name)}
               <span className="text-sm">{tool.name}</span>
               {tool.isActive && (
                 <div className="ml-auto w-2 h-2 bg-horizon-accent rounded-full animate-pulse-horizon" />

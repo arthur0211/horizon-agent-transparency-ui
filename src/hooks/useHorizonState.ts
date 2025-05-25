@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { AgentStatus, PlanningPhase, UserData, ChatMessage, ProjectionData, Command } from '../types';
 
@@ -11,15 +10,15 @@ const initialPhases: PlanningPhase[] = [
 ];
 
 const initialAgent: AgentStatus = {
-  name: '🤖 AGENTE FINANCEIRO',
+  name: 'AGENTE FINANCEIRO',
   isActive: true,
   progress: 0,
   confidence: 0,
   reasoning: ['Iniciando perfil...', 'Preparando análise...'],
   tools: [
-    { name: 'Calculadora Juros', isActive: false, icon: '📊' },
-    { name: 'Análise Perfil', isActive: false, icon: '🎯' },
-    { name: 'Projeção Financeira', isActive: false, icon: '📈' },
+    { name: 'Calculadora Juros', isActive: false, icon: '' },
+    { name: 'Análise Perfil', isActive: false, icon: '' },
+    { name: 'Projeção Financeira', isActive: false, icon: '' },
   ],
   isProcessing: false,
 };
