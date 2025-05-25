@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessage, UserData } from '../types';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
-import { VoiceControls } from './VoiceControls';
+import { VoiceInterface } from './VoiceInterface';
 
 interface ConversationPanelProps {
   messages: ChatMessage[];
@@ -207,71 +206,81 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
+      {/* Voice Interface or Input Area */}
       <div className="p-6 border-t border-white/10">
         {speechError && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded text-sm text-red-200">
             {speechError}
           </div>
         )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputValue}
-              onChange={handleInputChange}
-              placeholder={getPlaceholder()}
-              className={`horizon-input ${!isValid ? 'error' : ''} ${isVoiceMode ? 'bg-white/10' : ''}`}
-              autoFocus={!isVoiceMode}
-              disabled={isVoiceMode && isListening}
-            />
-            {getInputHint() && (
-              <div className="text-sm text-horizon-text-secondary">
-                {getInputHint()}
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {!isVoiceMode && (
+
+        {isVoiceMode ? (
+          <VoiceInterface
+            isVoiceMode={isVoiceMode}
+            isListening={isListening}
+            isSpeaking={isSpeaking}
+            isSupported={isVoiceSupported}
+            onToggleVoiceMode={() => setIsVoiceMode(!isVoiceMode)}
+            onStartListening={startListening}
+            onStopListening={stopListening}
+            onStopSpeaking={stopSpeaking}
+          />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={handleInputChange}
+                placeholder={getPlaceholder()}
+                className={`horizon-input ${!isValid ? 'error' : ''}`}
+                autoFocus
+              />
+              {getInputHint() && (
+                <div className="text-sm text-horizon-text-secondary">
+                  {getInputHint()}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <button
                   type="submit"
                   className="horizon-button"
                 >
                   Continuar
                 </button>
-              )}
-              
-              <button
-                type="button"
-                onClick={() => setInputValue('')}
-                className="px-4 py-2 text-sm text-horizon-text-secondary hover:text-white transition-colors duration-200"
-              >
-                Limpar
-              </button>
-            </div>
+                
+                <button
+                  type="button"
+                  onClick={() => setInputValue('')}
+                  className="px-4 py-2 text-sm text-horizon-text-secondary hover:text-white transition-colors duration-200"
+                >
+                  Limpar
+                </button>
+              </div>
 
-            <div className="flex items-center gap-4">
-              <VoiceControls
-                isVoiceMode={isVoiceMode}
-                isListening={isListening}
-                isSpeaking={isSpeaking}
-                isSupported={isVoiceSupported}
-                onToggleVoiceMode={() => setIsVoiceMode(!isVoiceMode)}
-                onStartListening={startListening}
-                onStopListening={stopListening}
-                onStopSpeaking={stopSpeaking}
-              />
+              <div className="flex items-center gap-4">
+                <VoiceInterface
+                  isVoiceMode={isVoiceMode}
+                  isListening={isListening}
+                  isSpeaking={isSpeaking}
+                  isSupported={isVoiceSupported}
+                  onToggleVoiceMode={() => setIsVoiceMode(!isVoiceMode)}
+                  onStartListening={startListening}
+                  onStopListening={stopListening}
+                  onStopSpeaking={stopSpeaking}
+                />
 
-              <div className="text-sm text-horizon-text-secondary">
-                ⌘K Comandos
+                <div className="text-sm text-horizon-text-secondary">
+                  ⌘K Comandos
+                </div>
               </div>
             </div>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
     </main>
   );
