@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Bot, BarChart3, Target, Zap, FileText, Wrench, ClipboardList, Keyboard } from 'lucide-react';
 import { AgentStatus, PlanningPhase } from '../types';
 
 interface AgentHubProps {
@@ -22,6 +23,7 @@ export const AgentHub: React.FC<AgentHubProps> = ({
       {/* Agent Info */}
       <div className="space-y-4">
         <div className="flex items-center gap-3">
+          <Bot className="w-5 h-5 text-horizon-accent" />
           <div className="text-lg font-semibold text-white">{agent.name}</div>
           {agent.isProcessing && (
             <div className="w-2 h-2 bg-horizon-accent rounded-full animate-pulse-horizon" />
@@ -37,17 +39,26 @@ export const AgentHub: React.FC<AgentHubProps> = ({
         <div className="metadata">Status</div>
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-horizon-text-secondary">📊 Progresso:</span>
+            <span className="text-sm text-horizon-text-secondary flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Progresso:
+            </span>
             <span className="text-sm font-medium text-white">{agent.progress}%</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-horizon-text-secondary">🎯 Confiança:</span>
+            <span className="text-sm text-horizon-text-secondary flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Confiança:
+            </span>
             <span className="text-sm font-medium text-white">
               {agent.confidence > 0 ? `${agent.confidence}%` : '--'}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-horizon-text-secondary">⚡ Estado:</span>
+            <span className="text-sm text-horizon-text-secondary flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              Estado:
+            </span>
             <span className="text-sm font-medium text-white">
               {agent.isProcessing ? 'Processando...' : 'Pronto'}
             </span>
@@ -57,7 +68,10 @@ export const AgentHub: React.FC<AgentHubProps> = ({
 
       {/* Reasoning */}
       <div className="space-y-3">
-        <div className="metadata">📝 Raciocínio</div>
+        <div className="metadata flex items-center gap-2">
+          <FileText className="w-4 h-4" />
+          Raciocínio
+        </div>
         <div className="space-y-2" aria-live="polite">
           {agent.reasoning.map((step, index) => (
             <div 
@@ -73,7 +87,10 @@ export const AgentHub: React.FC<AgentHubProps> = ({
 
       {/* Tools */}
       <div className="space-y-3">
-        <div className="metadata">🔧 Ferramentas</div>
+        <div className="metadata flex items-center gap-2">
+          <Wrench className="w-4 h-4" />
+          Ferramentas
+        </div>
         <div className="space-y-2">
           {agent.tools.map((tool, index) => (
             <div 
@@ -92,7 +109,10 @@ export const AgentHub: React.FC<AgentHubProps> = ({
 
       {/* Phase Navigation */}
       <div className="space-y-3">
-        <div className="metadata">📋 Fases</div>
+        <div className="metadata flex items-center gap-2">
+          <ClipboardList className="w-4 h-4" />
+          Fases
+        </div>
         <div className="space-y-2">
           {phases.map((phase) => (
             <button
@@ -118,7 +138,10 @@ export const AgentHub: React.FC<AgentHubProps> = ({
 
       {/* Shortcuts */}
       <div className="space-y-3">
-        <div className="metadata">⌨️ Atalhos</div>
+        <div className="metadata flex items-center gap-2">
+          <Keyboard className="w-4 h-4" />
+          Atalhos
+        </div>
         <div className="space-y-1 text-xs text-horizon-text-secondary">
           <div>⌘K - Comandos rápidos</div>
           <div>Tab - Navegar campos</div>
