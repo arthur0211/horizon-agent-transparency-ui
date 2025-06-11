@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Mic, Phone } from 'lucide-react';
+import { Mic, Phone, AlertCircle } from 'lucide-react';
 
 interface VoiceInterfaceProps {
   isVoiceMode: boolean;
@@ -25,17 +25,34 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
 }) => {
   if (!isSupported) {
     return (
-      <div className="text-center text-horizon-text-secondary text-sm py-8">
-        Conversa por voz não suportada neste navegador
+      <div 
+        className="text-center py-8 space-y-4"
+        role="alert"
+        aria-live="polite"
+      >
+        <div className="flex items-center justify-center gap-2 text-orange-400">
+          <AlertCircle className="w-5 h-5" aria-hidden="true" />
+          <span className="font-medium">Conversa por voz não suportada</span>
+        </div>
+        <div className="text-sm text-horizon-text-secondary max-w-md mx-auto">
+          Seu navegador não suporta reconhecimento de voz. Você pode continuar usando o chat digitando suas respostas.
+        </div>
+        <div className="text-xs text-horizon-text-secondary">
+          Recomendamos Chrome, Edge ou Safari para melhor experiência de voz.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 space-y-6">
+    <div 
+      className="flex flex-col items-center justify-center py-8 space-y-6"
+      role="region"
+      aria-label="Interface de voz"
+    >
       {/* Visual Feedback Circle */}
       {isVoiceMode && (
-        <div className="relative">
+        <div className="relative" role="status" aria-live="polite">
           <div className={`w-32 h-32 rounded-full border-2 transition-all duration-300 ${
             isListening 
               ? 'border-horizon-accent animate-pulse-horizon bg-horizon-accent/10' 
@@ -52,7 +69,7 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
             }`} />
             
             {/* Dots pattern similar to the image */}
-            <div className="absolute inset-4 rounded-full">
+            <div className="absolute inset-4 rounded-full" aria-hidden="true">
               {Array.from({ length: 40 }).map((_, i) => (
                 <div
                   key={i}
@@ -71,11 +88,21 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
               ))}
             </div>
           </div>
+          
+          {/* Screen reader status */}
+          <span className="sr-only">
+            {isListening 
+              ? 'Escutando sua voz' 
+              : isSpeaking 
+              ? 'Reproduzindo resposta do agente' 
+              : 'Aguardando comando de voz'
+            }
+          </span>
         </div>
       )}
 
       {/* Mode Toggle Buttons */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4" role="group" aria-label="Alternar modo de interação">
         <button
           type="button"
           onClick={onToggleVoiceMode}
@@ -85,8 +112,10 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
               : 'bg-white/10 text-horizon-text-secondary hover:bg-white/20'
           }`}
           title="Modo Chat"
+          aria-label={`Alternar para modo chat${!isVoiceMode ? ' (ativo)' : ''}`}
+          aria-pressed={!isVoiceMode}
         >
-          <Phone className="w-5 h-5" />
+          <Phone className="w-5 h-5" aria-hidden="true" />
         </button>
 
         <button
@@ -98,19 +127,22 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
               : 'bg-white/10 text-horizon-text-secondary hover:bg-white/20'
           }`}
           title="Modo Voz"
+          aria-label={`Alternar para modo voz${isVoiceMode ? ' (ativo)' : ''}`}
+          aria-pressed={isVoiceMode}
         >
-          <Mic className="w-5 h-5" />
+          <Mic className="w-5 h-5" aria-hidden="true" />
         </button>
       </div>
 
       {/* Voice Controls */}
       {isVoiceMode && (
-        <div className="flex flex-col items-center space-y-4">
+        <div className="flex flex-col items-center space-y-4" role="group" aria-label="Controles de voz">
           {isSpeaking ? (
             <button
               type="button"
               onClick={onStopSpeaking}
               className="px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors duration-200 text-sm font-medium"
+              aria-label="Parar reprodução da resposta"
             >
               Parar Reprodução
             </button>
@@ -123,12 +155,17 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
                   ? 'bg-red-500 text-white hover:bg-red-600'
                   : 'bg-horizon-accent text-white hover:bg-horizon-accent/80'
               }`}
+              aria-label={isListening ? 'Parar gravação de voz' : 'Iniciar gravação de voz'}
             >
               {isListening ? 'Parar Gravação' : 'Começar a Falar'}
             </button>
           )}
 
-          <div className="text-center text-sm text-horizon-text-secondary">
+          <div 
+            className="text-center text-sm text-horizon-text-secondary"
+            aria-live="polite"
+            role="status"
+          >
             {isListening 
               ? '🎤 Escutando...' 
               : isSpeaking 
@@ -140,7 +177,7 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
       )}
 
       {/* Mode Labels */}
-      <div className="flex items-center gap-8 text-sm">
+      <div className="flex items-center gap-8 text-sm" role="group" aria-label="Indicadores de modo atual">
         <div className={`transition-colors duration-200 ${
           !isVoiceMode ? 'text-white font-medium' : 'text-horizon-text-secondary'
         }`}>
