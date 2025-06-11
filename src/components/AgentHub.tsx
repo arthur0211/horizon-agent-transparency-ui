@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bot, BarChart3, Target, Zap, FileText, Wrench, ClipboardList, Keyboard, Calculator, User, TrendingUp, Edit3, RotateCcw } from 'lucide-react';
+import { Bot, BarChart3, Target, Zap, FileText, Wrench, ClipboardList, Keyboard, Calculator, User, TrendingUp, Edit3, RotateCcw, Plus, X } from 'lucide-react';
 import { AgentStatus, PlanningPhase } from '../types';
 
 interface AgentHubProps {
@@ -23,6 +23,13 @@ export const AgentHub: React.FC<AgentHubProps> = ({
     "Analise a situação financeira do usuário com renda de {income} e perfil de risco {risk}. Calcule projeções para aposentadoria considerando inflação de 4% ao ano e rentabilidade média de {return}%."
   );
   const [defaultPrompt] = useState(currentPrompt);
+  
+  const [isEditingLearning, setIsEditingLearning] = useState(false);
+  const [learningNotes, setLearningNotes] = useState([
+    'Preferência por explicações detalhadas',
+    'Foco em segurança financeira'
+  ]);
+  const [newLearningNote, setNewLearningNote] = useState('');
 
   const getToolIcon = (toolName: string) => {
     switch (toolName) {
@@ -45,6 +52,24 @@ export const AgentHub: React.FC<AgentHubProps> = ({
   const restoreDefaultPrompt = () => {
     setCurrentPrompt(defaultPrompt);
     setIsEditingPrompt(false);
+  };
+
+  const addLearningNote = () => {
+    if (newLearningNote.trim()) {
+      setLearningNotes(prev => [...prev, newLearningNote.trim()]);
+      setNewLearningNote('');
+    }
+  };
+
+  const removeLearningNote = (index: number) => {
+    setLearningNotes(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addLearningNote();
+    }
   };
 
   return (
@@ -116,10 +141,20 @@ export const AgentHub: React.FC<AgentHubProps> = ({
 
       {/* Personalization Indicators */}
       <div className="agent-card space-y-3" role="region" aria-label="Indicadores de Personalização">
-        <div className="metadata flex items-center gap-2">
-          <Zap className="w-4 h-4" />
-          Aprendizado
+        <div className="flex items-center justify-between">
+          <div className="metadata flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            Aprendizado
+          </div>
+          <button
+            onClick={() => setIsEditingLearning(!isEditingLearning)}
+            className="text-xs text-horizon-accent hover:text-white transition-colors"
+            aria-label={isEditingLearning ? "Visualizar notas" : "Editar notas"}
+          >
+            {isEditingLearning ? 'Ver' : 'Editar'}
+          </button>
         </div>
+        
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-horizon-text-secondary">Conversas:</span>
@@ -127,12 +162,55 @@ export const AgentHub: React.FC<AgentHubProps> = ({
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-horizon-text-secondary">Adaptações:</span>
-            <span className="text-sm font-medium text-horizon-accent">+2</span>
+            <span className="text-sm font-medium text-horizon-accent">+{learningNotes.length}</span>
           </div>
-          <div className="text-xs text-horizon-text-secondary">
-            • Preferência por explicações detalhadas
-            • Foco em segurança financeira
-          </div>
+          
+          {isEditingLearning ? (
+            <div className="space-y-2">
+              <div className="space-y-1">
+                {learningNotes.map((note, index) => (
+                  <div key={index} className="flex items-center gap-2 text-xs">
+                    <span className="text-horizon-text-secondary flex-1">• {note}</span>
+                    <button
+                      onClick={() => removeLearningNote(index)}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                      aria-label={`Remover nota: ${note}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newLearningNote}
+                  onChange={(e) => setNewLearningNote(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="flex-1 horizon-input text-xs"
+                  placeholder="Nova nota de aprendizado..."
+                  aria-label="Nova nota de aprendizado"
+                />
+                <button
+                  onClick={addLearningNote}
+                  disabled={!newLearningNote.trim()}
+                  className="text-horizon-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Adicionar nota"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {learningNotes.map((note, index) => (
+                <div key={index} className="text-xs text-horizon-text-secondary">
+                  • {note}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
