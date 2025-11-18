@@ -1,28 +1,66 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Mic, Phone, AlertCircle } from 'lucide-react';
+import { useGeminiSession } from '../hooks/useGeminiSession';
 
 interface VoiceInterfaceProps {
   isVoiceMode: boolean;
-  isListening: boolean;
-  isSpeaking: boolean;
-  isSupported: boolean;
   onToggleVoiceMode: () => void;
-  onStartListening: () => void;
-  onStopListening: () => void;
-  onStopSpeaking: () => void;
+  onMessage?: (message: string) => void;
 }
 
 export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
   isVoiceMode,
-  isListening,
-  isSpeaking,
-  isSupported,
   onToggleVoiceMode,
-  onStartListening,
-  onStopListening,
-  onStopSpeaking,
+  onMessage,
 }) => {
+  const {
+    isConnected,
+    isListening,
+    isSpeaking,
+    messages,
+    error,
+    connect,
+    disconnect,
+    startListening,
+    stopListening,
+    state,
+  } = useGeminiSession();
+
+  // Auto-connect when voice mode is activated
+  useEffect(() => {
+    if (isVoiceMode && !isConnected && state === 'disconnected') {
+      connect().catch(err => {
+        console.error('Failed to connect:', err);
+      });
+    } else if (!isVoiceMode && isConnected) {
+      disconnect();
+    }
+  }, [isVoiceMode, isConnected, state, connect, disconnect]);
+
+  // Forward messages to parent
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant') {
+        onMessage?.(lastMessage.content);
+      }
+    }
+  }, [messages, onMessage]);
+
+  const isSupported = 'WebSocket' in window && 'MediaDevices' in window;
+
+  const handleStartListening = () => {
+    if (state === 'connected') {
+      startListening();
+    } else if (state === 'disconnected') {
+      connect();
+    }
+  };
+
+  const handleStopSpeaking = () => {
+    disconnect();
+  };
+
   if (!isSupported) {
     return (
       <div 
@@ -35,11 +73,35 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
           <span className="font-medium">Conversa por voz não suportada</span>
         </div>
         <div className="text-sm text-horizon-text-secondary max-w-md mx-auto">
-          Seu navegador não suporta reconhecimento de voz. Você pode continuar usando o chat digitando suas respostas.
+          Seu navegador não suporta tecnologia necessária para conversa por voz. Você pode continuar usando o chat digitando suas respostas.
         </div>
         <div className="text-xs text-horizon-text-secondary">
-          Recomendamos Chrome, Edge ou Safari para melhor experiência de voz.
+          Recomendamos Chrome, Edge ou Safari atualizado para melhor experiência.
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div 
+        className="text-center py-8 space-y-4"
+        role="alert"
+        aria-live="assertive"
+      >
+        <div className="flex items-center justify-center gap-2 text-red-400">
+          <AlertCircle className="w-5 h-5" aria-hidden="true" />
+          <span className="font-medium">Erro na conexão de voz</span>
+        </div>
+        <div className="text-sm text-horizon-text-secondary max-w-md mx-auto">
+          {error}
+        </div>
+        <button
+          onClick={() => connect()}
+          className="px-4 py-2 bg-horizon-accent text-white rounded hover:bg-horizon-accent/80 transition-colors"
+        >
+          Tentar Novamente
+        </button>
       </div>
     );
   }
@@ -140,7 +202,7 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
           {isSpeaking ? (
             <button
               type="button"
-              onClick={onStopSpeaking}
+              onClick={handleStopSpeaking}
               className="px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors duration-200 text-sm font-medium"
               aria-label="Parar reprodução da resposta"
             >
@@ -149,15 +211,18 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
           ) : (
             <button
               type="button"
-              onClick={isListening ? onStopListening : onStartListening}
+              onClick={isListening ? stopListening : handleStartListening}
               className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
                 isListening
                   ? 'bg-red-500 text-white hover:bg-red-600'
+                  : state === 'connecting'
+                  ? 'bg-horizon-accent/50 text-white cursor-wait'
                   : 'bg-horizon-accent text-white hover:bg-horizon-accent/80'
               }`}
               aria-label={isListening ? 'Parar gravação de voz' : 'Iniciar gravação de voz'}
+              disabled={state === 'connecting'}
             >
-              {isListening ? 'Parar Gravação' : 'Começar a Falar'}
+              {state === 'connecting' ? 'Conectando...' : isListening ? 'Parar Gravação' : 'Começar a Falar'}
             </button>
           )}
 
@@ -166,11 +231,15 @@ export const VoiceInterface: React.FC<VoiceInterfaceProps> = ({
             aria-live="polite"
             role="status"
           >
-            {isListening 
-              ? '🎤 Escutando...' 
+            {state === 'connecting' 
+              ? '⏳ Conectando ao Gemini Live...'
+              : isListening 
+              ? '🎤 Escutando... (fale naturalmente)'
               : isSpeaking 
-              ? '🔊 Reproduzindo resposta...' 
-              : '💬 Clique para começar a conversar por voz'
+              ? '🔊 Gemini está respondendo...' 
+              : isConnected
+              ? '💬 Pronto! Clique para começar a falar'
+              : '💬 Clique para iniciar conversa por voz'
             }
           </div>
         </div>
