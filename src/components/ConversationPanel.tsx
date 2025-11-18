@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Mic } from 'lucide-react';
 import { ChatMessage, UserData } from '../types';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { useTextToSpeech } from '../hooks/useTextToSpeech';
@@ -217,13 +218,8 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
         {isVoiceMode ? (
           <VoiceInterface
             isVoiceMode={isVoiceMode}
-            isListening={isListening}
-            isSpeaking={isSpeaking}
-            isSupported={isVoiceSupported}
             onToggleVoiceMode={() => setIsVoiceMode(!isVoiceMode)}
-            onStartListening={startListening}
-            onStopListening={stopListening}
-            onStopSpeaking={stopSpeaking}
+            onMessage={onMessage}
           />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -263,16 +259,15 @@ export const ConversationPanel: React.FC<ConversationPanelProps> = ({
               </div>
 
               <div className="flex items-center gap-4">
-                <VoiceInterface
-                  isVoiceMode={isVoiceMode}
-                  isListening={isListening}
-                  isSpeaking={isSpeaking}
-                  isSupported={isVoiceSupported}
-                  onToggleVoiceMode={() => setIsVoiceMode(!isVoiceMode)}
-                  onStartListening={startListening}
-                  onStopListening={stopListening}
-                  onStopSpeaking={stopSpeaking}
-                />
+                <button
+                  type="button"
+                  onClick={() => setIsVoiceMode(!isVoiceMode)}
+                  className="px-4 py-2 text-sm text-horizon-text-secondary hover:text-white transition-colors duration-200 flex items-center gap-2"
+                  title="Alternar modo de voz"
+                >
+                  <Mic className="w-4 h-4" />
+                  Voz
+                </button>
 
                 <div className="text-sm text-horizon-text-secondary">
                   ⌘K Comandos
